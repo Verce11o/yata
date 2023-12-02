@@ -1,0 +1,15 @@
+postgres:
+  PostgresqlHost: localhost
+  PostgresqlPort: 5432
+  PostgresqlUser: postgres
+  PostgresqlPassword: password
+  PostgresqlDbname: database
+
+http_server:
+  port: 8080
+
+services:
+  auth:
+    addr: 127.0.0.1:3999
+
+mode: dev
