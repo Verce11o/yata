@@ -9,7 +9,19 @@ type Config struct {
 	Postgres   PostgresConfig `yaml:"postgres" env-required:"true"`
 	HTTPServer HTTPServer     `yaml:"http_server" env-required:"true"`
 	Services   Services       `yaml:"services" env-required:"true"`
+	App        App            `yaml:"app" env-required:"true"`
 	Mode       string         `yaml:"mode"`
+}
+
+type App struct {
+	JWT  JWTConfig `yaml:"jwt"`
+	Port string    `yaml:"port"`
+}
+
+type JWTConfig struct {
+	Secret        string `yaml:"secret"`
+	TokenTTLHours int    `yaml:"token_ttl_hours"`
+	Salt          string `yaml:"salt"`
 }
 
 type PostgresConfig struct {
@@ -28,6 +40,9 @@ type Services struct {
 	Auth struct {
 		Addr string `yaml:"addr"`
 	} `yaml:"auth"`
+	Tweets struct {
+		Addr string `yaml:"addr"`
+	} `yaml:"tweets"`
 }
 
 func LoadConfig() *Config {

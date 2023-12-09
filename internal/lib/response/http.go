@@ -9,13 +9,15 @@ import (
 
 var (
 	ErrInvalidRequest = errors.New("invalid request")
+	ErrInvalidImage   = errors.New("invalid image")
 )
 
 func mapErrorWithCode(err error) int {
 	switch {
 	case errors.Is(err, ErrInvalidRequest):
 		return http.StatusBadRequest
-
+	case errors.Is(err, ErrInvalidImage):
+		return http.StatusBadRequest
 	}
 
 	return http.StatusInternalServerError

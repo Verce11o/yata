@@ -5,6 +5,8 @@ import (
 	"github.com/Verce11o/yata/internal/config"
 	"github.com/Verce11o/yata/internal/http"
 	"github.com/Verce11o/yata/internal/http/auth"
+	"github.com/Verce11o/yata/internal/http/middleware"
+	"github.com/Verce11o/yata/internal/http/tweets"
 	"github.com/Verce11o/yata/internal/lib/logger"
 	"github.com/Verce11o/yata/internal/lib/response"
 	"github.com/Verce11o/yata/internal/service"
@@ -23,12 +25,16 @@ func Run(cfg *config.Config) {
 	log := logger.NewLogger(cfg.Mode)
 	validator := response.NewValidator()
 
-	// Init services
+	// Init service q
 	services := service.NewServices(cfg)
+
+	// Init middleware
+	middlewareHandler := middleware.NewMiddlewareHandler(log, services, cfg)
 
 	// Init handlers
 	authHandler := auth.NewHandler(log, services, validator)
-	handlers := http.NewHandlers(authHandler)
+	tweetHandler := tweets.NewHandler(log, services, validator)
+	handlers := http.NewHandlers(authHandler, tweetHandler, middlewareHandler)
 
 	handlers.InitRoutes(app)
 

@@ -11,5 +11,14 @@ http_server:
 services:
   auth:
     addr: 127.0.0.1:3999
+  tweets:
+    addr: 127.0.0.1:3998
+
+app:
+  jwt:
+    secret: yata_auth_key
+    token_ttl_hours: 12
+    salt: yata_vercello_salt
+
 
 mode: dev
