@@ -10,6 +10,7 @@ type Config struct {
 	HTTPServer HTTPServer     `yaml:"http_server" env-required:"true"`
 	Services   Services       `yaml:"services" env-required:"true"`
 	App        App            `yaml:"app" env-required:"true"`
+	Metrics    Metrics        `yaml:"metrics" env-required:"true"`
 	Mode       string         `yaml:"mode"`
 }
 
@@ -34,6 +35,12 @@ type PostgresConfig struct {
 
 type HTTPServer struct {
 	Port string `yaml:"port" env:"HTTPSERVER_PORT"`
+}
+
+type Metrics struct {
+	Jaeger struct {
+		Endpoint string `yaml:"endpoint"`
+	} `yaml:"jaeger"`
 }
 
 type Services struct {

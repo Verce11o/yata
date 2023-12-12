@@ -8,6 +8,7 @@ import (
 	"github.com/Verce11o/yata/internal/http/middleware"
 	"github.com/Verce11o/yata/internal/http/tweets"
 	"github.com/Verce11o/yata/internal/lib/logger"
+	trace "github.com/Verce11o/yata/internal/lib/metrics/tracer"
 	"github.com/Verce11o/yata/internal/lib/response"
 	"github.com/Verce11o/yata/internal/service"
 	"github.com/gofiber/fiber/v2"
@@ -25,15 +26,18 @@ func Run(cfg *config.Config) {
 	log := logger.NewLogger(cfg.Mode)
 	validator := response.NewValidator()
 
+	// Init metrics
+	tracer := trace.InitTracer("http")
+
 	// Init service q
-	services := service.NewServices(cfg)
+	services := service.NewServices(cfg, tracer)
 
 	// Init middleware
-	middlewareHandler := middleware.NewMiddlewareHandler(log, services, cfg)
+	middlewareHandler := middleware.NewMiddlewareHandler(log, tracer.Tracer, services, cfg)
 
 	// Init handlers
-	authHandler := auth.NewHandler(log, services, validator)
-	tweetHandler := tweets.NewHandler(log, services, validator)
+	authHandler := auth.NewHandler(log, tracer.Tracer, services, validator)
+	tweetHandler := tweets.NewHandler(log, tracer.Tracer, services, validator)
 	handlers := http.NewHandlers(authHandler, tweetHandler, middlewareHandler)
 
 	handlers.InitRoutes(app)

@@ -1,13 +1,13 @@
 package auth
 
 import (
-	"context"
 	pbSSO "github.com/Verce11o/yata-protos/gen/go/sso"
 	"github.com/Verce11o/yata/internal/domain"
 	"github.com/Verce11o/yata/internal/lib/response"
 	"github.com/Verce11o/yata/internal/service"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/status"
 	"net/http"
@@ -15,15 +15,18 @@ import (
 
 type Handler struct {
 	log       *zap.SugaredLogger
+	tracer    trace.Tracer
 	services  *service.Services
 	validator *validator.Validate
 }
 
-func NewHandler(log *zap.SugaredLogger, services *service.Services, validator *validator.Validate) *Handler {
-	return &Handler{log: log, services: services, validator: validator}
+func NewHandler(log *zap.SugaredLogger, tracer trace.Tracer, services *service.Services, validator *validator.Validate) *Handler {
+	return &Handler{log: log, tracer: tracer, services: services, validator: validator}
 }
 
 func (h *Handler) SignUp(c *fiber.Ctx) error {
+	ctx, span := h.tracer.Start(c.UserContext(), "Gateway.Signup")
+	defer span.End()
 
 	var input domain.SignUpInput
 
@@ -32,7 +35,7 @@ func (h *Handler) SignUp(c *fiber.Ctx) error {
 		return response.WithError(c, err)
 	}
 
-	resp, err := h.services.Auth.Register(context.Background(), &pbSSO.RegisterRequest{
+	resp, err := h.services.Auth.Register(ctx, &pbSSO.RegisterRequest{
 		Username: input.Username,
 		Email:    input.Email,
 		Password: input.Password,
@@ -52,6 +55,9 @@ func (h *Handler) SignUp(c *fiber.Ctx) error {
 }
 
 func (h *Handler) Login(c *fiber.Ctx) error {
+	ctx, span := h.tracer.Start(c.UserContext(), "Gateway.Login")
+	defer span.End()
+
 	var input domain.SignInInput
 
 	if err := response.ReadRequest(c, h.validator, &input); err != nil {
@@ -59,7 +65,7 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 		return response.WithError(c, err)
 	}
 
-	resp, err := h.services.Auth.Login(context.Background(), &pbSSO.LoginRequest{
+	resp, err := h.services.Auth.Login(ctx, &pbSSO.LoginRequest{
 		Email:    input.Email,
 		Password: input.Password,
 	})

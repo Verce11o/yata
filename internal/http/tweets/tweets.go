@@ -1,7 +1,6 @@
 package tweets
 
 import (
-	"context"
 	pbTweets "github.com/Verce11o/yata-protos/gen/go/tweets"
 	"github.com/Verce11o/yata/internal/domain"
 	"github.com/Verce11o/yata/internal/lib/files"
@@ -9,6 +8,7 @@ import (
 	"github.com/Verce11o/yata/internal/service"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/status"
 	"net/http"
@@ -16,15 +16,18 @@ import (
 
 type Handler struct {
 	log       *zap.SugaredLogger
+	tracer    trace.Tracer
 	services  *service.Services
 	validator *validator.Validate
 }
 
-func NewHandler(log *zap.SugaredLogger, services *service.Services, validator *validator.Validate) *Handler {
-	return &Handler{log: log, services: services, validator: validator}
+func NewHandler(log *zap.SugaredLogger, trace trace.Tracer, services *service.Services, validator *validator.Validate) *Handler {
+	return &Handler{log: log, tracer: trace, services: services, validator: validator}
 }
 
 func (h *Handler) CreateTweet(c *fiber.Ctx) error {
+	ctx, span := h.tracer.Start(c.UserContext(), "Gateway.CreateTweet")
+	defer span.End()
 
 	userID := c.Locals("userID")
 
@@ -50,7 +53,7 @@ func (h *Handler) CreateTweet(c *fiber.Ctx) error {
 
 	}
 
-	resp, err := h.services.Tweets.CreateTweet(context.Background(), &pbTweets.CreateTweetRequest{
+	resp, err := h.services.Tweets.CreateTweet(ctx, &pbTweets.CreateTweetRequest{
 		UserId: userID.(string),
 		Text:   text,
 		Image:  image,
@@ -69,9 +72,12 @@ func (h *Handler) CreateTweet(c *fiber.Ctx) error {
 }
 
 func (h *Handler) GetTweet(c *fiber.Ctx) error {
+	ctx, span := h.tracer.Start(c.UserContext(), "Gateway.GetTweet")
+	defer span.End()
+
 	tweetID := c.Params("id")
 
-	tweet, err := h.services.Tweets.GetTweet(context.Background(), &pbTweets.GetTweetRequest{TweetId: tweetID})
+	tweet, err := h.services.Tweets.GetTweet(ctx, &pbTweets.GetTweetRequest{TweetId: tweetID})
 
 	if err != nil {
 		h.log.Errorf("GetTweet:GRPC: %v", err.Error())
@@ -89,6 +95,9 @@ func (h *Handler) GetTweet(c *fiber.Ctx) error {
 }
 
 func (h *Handler) UpdateTweet(c *fiber.Ctx) error {
+	ctx, span := h.tracer.Start(c.UserContext(), "Gateway.UpdateTweet")
+	defer span.End()
+
 	userID := c.Locals("userID")
 	tweetID := c.Params("id")
 
@@ -114,7 +123,7 @@ func (h *Handler) UpdateTweet(c *fiber.Ctx) error {
 
 	}
 
-	tweet, err := h.services.Tweets.UpdateTweet(context.Background(), &pbTweets.UpdateTweetRequest{
+	tweet, err := h.services.Tweets.UpdateTweet(ctx, &pbTweets.UpdateTweetRequest{
 		UserId:  userID.(string),
 		Text:    text,
 		Image:   image,
@@ -137,10 +146,13 @@ func (h *Handler) UpdateTweet(c *fiber.Ctx) error {
 }
 
 func (h *Handler) DeleteTweet(c *fiber.Ctx) error {
+	ctx, span := h.tracer.Start(c.UserContext(), "Gateway.DeleteTweet")
+	defer span.End()
+
 	userID := c.Locals("userID")
 	tweetID := c.Params("id")
 
-	_, err := h.services.Tweets.DeleteTweet(context.Background(), &pbTweets.DeleteTweetRequest{UserId: userID.(string), TweetId: tweetID})
+	_, err := h.services.Tweets.DeleteTweet(ctx, &pbTweets.DeleteTweetRequest{UserId: userID.(string), TweetId: tweetID})
 
 	if err != nil {
 		h.log.Errorf("DeleteTweet:GRPC: %v", err.Error())
