@@ -86,10 +86,32 @@ func (h *Handler) GetTweet(c *fiber.Ctx) error {
 	}
 
 	return c.Status(http.StatusOK).JSON(domain.TweetResponse{
-		TweetID:    tweet.GetTweetId(),
-		UserID:     tweet.GetUserId(),
-		Text:       tweet.GetText(),
-		ImageChunk: tweet.GetImage().GetChunk(),
+		TweetID:  tweet.GetTweetId(),
+		UserID:   tweet.GetUserId(),
+		Text:     tweet.GetText(),
+		ImageURL: tweet.GetImageUrl(),
+	})
+
+}
+
+func (h *Handler) GetAllTweets(c *fiber.Ctx) error {
+	ctx, span := h.tracer.Start(c.UserContext(), "Gateway.GetTweet")
+	defer span.End()
+
+	cursor := c.Query("cursor")
+
+	resp, err := h.services.Tweets.GetAllTweets(ctx, &pbTweets.GetAllTweetsRequest{Cursor: cursor})
+
+	if err != nil {
+		h.log.Errorf("GetAllTweets:GRPC: %v", err.Error())
+		return response.WithError(c, err)
+	}
+
+	tweets := resp.GetTweets()
+
+	return c.Status(http.StatusOK).JSON(fiber.Map{
+		"data":   tweets,
+		"cursor": resp.GetCursor(),
 	})
 
 }
@@ -137,10 +159,10 @@ func (h *Handler) UpdateTweet(c *fiber.Ctx) error {
 	}
 
 	return c.Status(http.StatusOK).JSON(domain.TweetResponse{
-		TweetID:    tweet.GetTweetId(),
-		UserID:     tweet.GetUserId(),
-		Text:       tweet.GetText(),
-		ImageChunk: tweet.GetImage().GetChunk(),
+		TweetID:  tweet.GetTweetId(),
+		UserID:   tweet.GetUserId(),
+		Text:     tweet.GetText(),
+		ImageURL: tweet.GetImageUrl(),
 	})
 
 }

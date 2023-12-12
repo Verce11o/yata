@@ -6,8 +6,8 @@ type CreateTweetInput struct {
 }
 
 type TweetResponse struct {
-	TweetID    string `json:"tweet_id"`
-	UserID     string `json:"user_id"`
-	Text       string `json:"text"`
-	ImageChunk []byte `json:"image,omitempty"`
+	TweetID  string `json:"tweet_id"`
+	UserID   string `json:"user_id"`
+	Text     string `json:"text"`
+	ImageURL string `json:"image,omitempty"`
 }

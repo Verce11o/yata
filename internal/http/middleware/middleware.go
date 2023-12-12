@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"errors"
+	"fmt"
 	"github.com/Verce11o/yata-protos/gen/go/sso"
 	"github.com/Verce11o/yata/internal/config"
 	"github.com/Verce11o/yata/internal/service"
@@ -24,7 +25,7 @@ func NewMiddlewareHandler(log *zap.SugaredLogger, trace trace.Tracer, services *
 }
 
 func (h *Handler) AuthMiddleware(c *fiber.Ctx) error {
-	ctx, span := h.tracer.Start(c.UserContext(), c.OriginalURL())
+	ctx, span := h.tracer.Start(c.UserContext(), fmt.Sprintf("%s: %s", c.Method(), c.OriginalURL()))
 	c.SetUserContext(ctx)
 	defer span.End()
 

@@ -12,6 +12,7 @@ type AuthHandler interface {
 type TweetsHandler interface {
 	CreateTweet(ctx *fiber.Ctx) error
 	GetTweet(ctx *fiber.Ctx) error
+	GetAllTweets(ctx *fiber.Ctx) error
 	UpdateTweet(ctx *fiber.Ctx) error
 	DeleteTweet(ctx *fiber.Ctx) error
 }
@@ -42,6 +43,7 @@ func (h *Handlers) InitRoutes(app *fiber.App) {
 		tweets := api.Group("/tweets", h.AuthMiddleware)
 		{
 			tweets.Post("/", h.CreateTweet)
+			tweets.Get("/", h.GetAllTweets)
 			tweets.Get("/:id", h.GetTweet)
 			tweets.Put("/:id", h.UpdateTweet)
 			tweets.Delete("/:id", h.DeleteTweet)

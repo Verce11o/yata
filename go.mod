@@ -3,7 +3,7 @@ module github.com/Verce11o/yata
 go 1.21.3
 
 require (
-	github.com/Verce11o/yata-protos v0.0.0-20231210164223-7bcc37d20149
+	github.com/Verce11o/yata-protos v0.0.0-20231212182136-a02282d61eeb
 	github.com/go-playground/validator/v10 v10.16.0
 	github.com/gofiber/contrib/otelfiber v0.0.0-20230104210539-ac38bf6e480c
 	github.com/gofiber/fiber/v2 v2.51.0
