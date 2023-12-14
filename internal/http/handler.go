@@ -7,6 +7,8 @@ import (
 type AuthHandler interface {
 	SignUp(ctx *fiber.Ctx) error
 	Login(ctx *fiber.Ctx) error
+	Verify(ctx *fiber.Ctx) error
+	Activate(ctx *fiber.Ctx) error
 }
 
 type TweetsHandler interface {
@@ -38,6 +40,13 @@ func (h *Handlers) InitRoutes(app *fiber.App) {
 		{
 			auth.Post("/signup", h.SignUp)
 			auth.Post("/login", h.Login)
+
+		}
+
+		user := api.Group("/user")
+		{
+			user.Post("/verify", h.AuthMiddleware, h.Verify)
+			user.Get("/activate", h.Activate)
 		}
 
 		tweets := api.Group("/tweets", h.AuthMiddleware)

@@ -83,3 +83,55 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 	})
 
 }
+
+func (h *Handler) Verify(c *fiber.Ctx) error {
+	ctx, span := h.tracer.Start(c.UserContext(), "Gateway.Verify")
+	defer span.End()
+
+	userID := c.Locals("userID")
+	h.log.Debug(userID)
+
+	_, err := h.services.Auth.VerifyUser(ctx, &pbSSO.VerifyRequest{
+		UserId: userID.(string),
+	})
+
+	if err != nil {
+		h.log.Errorf("Verify:GRPC: %v", err.Error())
+		st, _ := status.FromError(err)
+		return response.WithGRPCError(c, st.Code())
+	}
+
+	return c.Status(http.StatusOK).JSON(fiber.Map{
+		"message": "success",
+	})
+
+}
+
+func (h *Handler) Activate(c *fiber.Ctx) error {
+	ctx, span := h.tracer.Start(c.UserContext(), "Gateway.Activate")
+	defer span.End()
+
+	//userID := c.Locals("userID")
+
+	code := c.Query("code")
+
+	if code == "" {
+		h.log.Errorf("invalid code")
+		return response.WithError(c, response.ErrInvalidCode)
+	}
+
+	_, err := h.services.Auth.CheckVerify(ctx, &pbSSO.CheckVerifyRequest{
+		Code: code,
+	})
+
+	if err != nil {
+		h.log.Errorf("Activate:GRPC: %v", err.Error())
+		st, _ := status.FromError(err)
+		return response.WithGRPCError(c, st.Code())
+	}
+
+	return c.Status(http.StatusOK).JSON(fiber.Map{
+		"message": "success",
+	})
+
+}
