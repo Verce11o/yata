@@ -7,6 +7,7 @@ import (
 	"github.com/Verce11o/yata/internal/service"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/status"
@@ -134,4 +135,27 @@ func (h *Handler) Activate(c *fiber.Ctx) error {
 		"message": "success",
 	})
 
+}
+
+func (h *Handler) GetUserByID(c *fiber.Ctx) error {
+	ctx, span := h.tracer.Start(c.UserContext(), "Gateway.GetUserByID")
+	defer span.End()
+
+	userID := c.Locals("userID")
+
+	user, err := h.services.Auth.GetUserByID(ctx, &pbSSO.GetUserRequest{UserId: userID.(string)})
+
+	if err != nil {
+		h.log.Errorf("GetUserByID:GRPC: %v", err.Error())
+		st, _ := status.FromError(err)
+		return response.WithGRPCError(c, st.Code())
+	}
+
+	return c.Status(http.StatusOK).JSON(domain.GetUserResponse{
+		UserID:     uuid.MustParse(user.GetUserId()),
+		Username:   user.GetUsername(),
+		Email:      user.GetEmail(),
+		IsVerified: user.GetIsVerified(),
+		CreatedAt:  user.GetCreatedAt().AsTime(),
+	})
 }
