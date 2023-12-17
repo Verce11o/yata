@@ -3,7 +3,7 @@ module github.com/Verce11o/yata
 go 1.21.3
 
 require (
-	github.com/Verce11o/yata-protos v0.0.0-20231214145517-2d0e2fe5543a
+	github.com/Verce11o/yata-protos v0.0.0-20231216144427-ff1ac2cb559f
 	github.com/go-playground/validator/v10 v10.16.0
 	github.com/gofiber/contrib/otelfiber v0.0.0-20230104210539-ac38bf6e480c
 	github.com/gofiber/fiber/v2 v2.51.0
@@ -30,6 +30,7 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/gofiber/contrib/otelfiber/v2 v2.0.0-20231206152400-10ad0d2c8754 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.18.1 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/klauspost/compress v1.17.4 // indirect

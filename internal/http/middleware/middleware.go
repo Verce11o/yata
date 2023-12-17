@@ -52,8 +52,6 @@ func (h *Handler) AuthMiddleware(c *fiber.Ctx) error {
 
 	userID, err := ParseToken(headerParts[1], h.cfg.App.JWT.Secret)
 
-	h.log.Debugf("AuthMiddleware: PassedUserID: %v", userID)
-
 	if errors.Is(err, jwt.ErrTokenExpired) {
 		h.log.Errorf("AuthMiddleware: %v", err.Error())
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
@@ -70,9 +68,7 @@ func (h *Handler) AuthMiddleware(c *fiber.Ctx) error {
 
 	span.AddEvent("call Auth Service")
 
-	user, err := h.services.Auth.GetUserByID(ctx, &sso.GetUserRequest{UserId: userID})
-
-	h.log.Debugf("AuthMiddleware: GetUser: %v", user.GetUserId())
+	_, err = h.services.Auth.GetUserByID(ctx, &sso.GetUserRequest{UserId: userID})
 
 	if err != nil {
 		h.log.Errorf("AuthMiddleware: %v", err.Error())

@@ -19,6 +19,14 @@ type TweetsHandler interface {
 	DeleteTweet(ctx *fiber.Ctx) error
 }
 
+type CommentsHandler interface {
+	CreateComment(ctx *fiber.Ctx) error
+	GetComment(ctx *fiber.Ctx) error
+	GetAllTweetComments(ctx *fiber.Ctx) error
+	UpdateComment(ctx *fiber.Ctx) error
+	DeleteComment(ctx *fiber.Ctx) error
+}
+
 type AuthMiddlewareHandler interface {
 	AuthMiddleware(ctx *fiber.Ctx) error
 }
@@ -26,11 +34,12 @@ type AuthMiddlewareHandler interface {
 type Handlers struct {
 	AuthHandler
 	TweetsHandler
+	CommentsHandler
 	AuthMiddlewareHandler
 }
 
-func NewHandlers(authHandler AuthHandler, tweetsHandler TweetsHandler, middlewareHandler AuthMiddlewareHandler) *Handlers {
-	return &Handlers{AuthHandler: authHandler, TweetsHandler: tweetsHandler, AuthMiddlewareHandler: middlewareHandler}
+func NewHandlers(authHandler AuthHandler, tweetsHandler TweetsHandler, commentsHandler CommentsHandler, middlewareHandler AuthMiddlewareHandler) *Handlers {
+	return &Handlers{AuthHandler: authHandler, TweetsHandler: tweetsHandler, CommentsHandler: commentsHandler, AuthMiddlewareHandler: middlewareHandler}
 }
 
 func (h *Handlers) InitRoutes(app *fiber.App) {
@@ -56,6 +65,16 @@ func (h *Handlers) InitRoutes(app *fiber.App) {
 			tweets.Get("/:id", h.GetTweet)
 			tweets.Put("/:id", h.UpdateTweet)
 			tweets.Delete("/:id", h.DeleteTweet)
+
+			comments := tweets.Group("/:id/comments")
+			{
+				comments.Get("/", h.GetAllTweetComments)
+				comments.Post("/", h.CreateComment)
+				comments.Put("/:comment_id", h.UpdateComment)
+				comments.Delete("/:comment_id", h.DeleteComment)
+			}
+
 		}
+
 	}
 }

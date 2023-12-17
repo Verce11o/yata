@@ -5,6 +5,7 @@ import (
 	"github.com/Verce11o/yata/internal/config"
 	"github.com/Verce11o/yata/internal/http"
 	"github.com/Verce11o/yata/internal/http/auth"
+	"github.com/Verce11o/yata/internal/http/comments"
 	"github.com/Verce11o/yata/internal/http/middleware"
 	"github.com/Verce11o/yata/internal/http/tweets"
 	"github.com/Verce11o/yata/internal/lib/logger"
@@ -38,7 +39,9 @@ func Run(cfg *config.Config) {
 	// Init handlers
 	authHandler := auth.NewHandler(log, tracer.Tracer, services, validator)
 	tweetHandler := tweets.NewHandler(log, tracer.Tracer, services, validator)
-	handlers := http.NewHandlers(authHandler, tweetHandler, middlewareHandler)
+	commentHandler := comments.NewHandler(log, tracer.Tracer, services, validator)
+
+	handlers := http.NewHandlers(authHandler, tweetHandler, commentHandler, middlewareHandler)
 
 	handlers.InitRoutes(app)
 

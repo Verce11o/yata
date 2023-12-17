@@ -160,7 +160,6 @@ func (h *Handler) UpdateTweet(c *fiber.Ctx) error {
 
 	return c.Status(http.StatusOK).JSON(domain.TweetResponse{
 		TweetID:  tweet.GetTweetId(),
-		UserID:   tweet.GetUserId(),
 		Text:     tweet.GetText(),
 		ImageURL: tweet.GetImageUrl(),
 	})

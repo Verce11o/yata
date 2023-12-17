@@ -50,6 +50,9 @@ type Services struct {
 	Tweets struct {
 		Addr string `yaml:"addr"`
 	} `yaml:"tweets"`
+	Comments struct {
+		Addr string `yaml:"addr"`
+	}
 }
 
 func LoadConfig() *Config {
