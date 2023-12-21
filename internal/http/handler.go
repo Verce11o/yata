@@ -10,6 +10,9 @@ type AuthHandler interface {
 	Verify(ctx *fiber.Ctx) error
 	Activate(ctx *fiber.Ctx) error
 	GetUserByID(ctx *fiber.Ctx) error
+	ForgotPassword(ctx *fiber.Ctx) error
+	VerifyPassword(ctx *fiber.Ctx) error
+	ResetPassword(ctx *fiber.Ctx) error
 }
 
 type TweetsHandler interface {
@@ -28,19 +31,20 @@ type CommentsHandler interface {
 	DeleteComment(ctx *fiber.Ctx) error
 }
 
-type AuthMiddlewareHandler interface {
+type MiddlewareHandler interface {
 	AuthMiddleware(ctx *fiber.Ctx) error
+	PasswordResetMiddleware(ctx *fiber.Ctx) error
 }
 
 type Handlers struct {
 	AuthHandler
 	TweetsHandler
 	CommentsHandler
-	AuthMiddlewareHandler
+	MiddlewareHandler
 }
 
-func NewHandlers(authHandler AuthHandler, tweetsHandler TweetsHandler, commentsHandler CommentsHandler, middlewareHandler AuthMiddlewareHandler) *Handlers {
-	return &Handlers{AuthHandler: authHandler, TweetsHandler: tweetsHandler, CommentsHandler: commentsHandler, AuthMiddlewareHandler: middlewareHandler}
+func NewHandlers(authHandler AuthHandler, tweetsHandler TweetsHandler, commentsHandler CommentsHandler, middlewareHandler MiddlewareHandler) *Handlers {
+	return &Handlers{AuthHandler: authHandler, TweetsHandler: tweetsHandler, CommentsHandler: commentsHandler, MiddlewareHandler: middlewareHandler}
 }
 
 func (h *Handlers) InitRoutes(app *fiber.App) {
@@ -53,11 +57,15 @@ func (h *Handlers) InitRoutes(app *fiber.App) {
 
 		}
 
-		user := api.Group("/user")
+		user := api.Group("/user", h.AuthMiddleware)
 		{
-			user.Get("/getme", h.AuthMiddleware, h.GetUserByID)
-			user.Post("/verify", h.AuthMiddleware, h.Verify)
+			user.Get("/getme", h.GetUserByID)
+			user.Post("/verify", h.Verify)
 			user.Get("/activate", h.Activate)
+
+			user.Post("/forgot-password", h.ForgotPassword)
+			user.Get("/verify-password", h.VerifyPassword)
+			user.Put("/reset-password", h.PasswordResetMiddleware, h.ResetPassword)
 		}
 
 		tweets := api.Group("/tweets", h.AuthMiddleware)

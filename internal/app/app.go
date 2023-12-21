@@ -34,7 +34,7 @@ func Run(cfg *config.Config) {
 	services := service.NewServices(cfg, tracer)
 
 	// Init middleware
-	middlewareHandler := middleware.NewMiddlewareHandler(log, tracer.Tracer, services, cfg)
+	middlewareHandler := middleware.NewMiddlewareHandler(log, tracer.Tracer, services, cfg, validator)
 
 	// Init handlers
 	authHandler := auth.NewHandler(log, tracer.Tracer, services, validator)

@@ -8,9 +8,10 @@ import (
 )
 
 var (
-	ErrInvalidRequest = errors.New("invalid request")
-	ErrInvalidImage   = errors.New("invalid image")
-	ErrInvalidCode    = errors.New("invalid code")
+	ErrInvalidRequest   = errors.New("invalid request")
+	ErrInvalidImage     = errors.New("invalid image")
+	ErrInvalidCode      = errors.New("invalid code or expired")
+	ErrPasswordMismatch = errors.New("password mismatch")
 )
 
 func mapErrorWithCode(err error) int {
@@ -18,6 +19,8 @@ func mapErrorWithCode(err error) int {
 	case errors.Is(err, ErrInvalidRequest):
 		return http.StatusBadRequest
 	case errors.Is(err, ErrInvalidImage):
+		return http.StatusBadRequest
+	case errors.Is(err, ErrPasswordMismatch):
 		return http.StatusBadRequest
 	case errors.Is(err, ErrInvalidCode):
 		return http.StatusBadRequest

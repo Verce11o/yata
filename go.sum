@@ -20,6 +20,8 @@ github.com/Verce11o/yata-protos v0.0.0-20231216144427-ff1ac2cb559f h1:tIO7KXjyq+
 github.com/Verce11o/yata-protos v0.0.0-20231216144427-ff1ac2cb559f/go.mod h1:jJmuZ7WZnP0vh+yQCAjYw5m53N/m6rL2tYl+sFtFXiI=
 github.com/Verce11o/yata-protos v0.0.0-20231217143324-f34264d6405b h1:8muU93VdAN+axEU7piSXsMmKeuoKRsgltHwnKuDCP18=
 github.com/Verce11o/yata-protos v0.0.0-20231217143324-f34264d6405b/go.mod h1:jJmuZ7WZnP0vh+yQCAjYw5m53N/m6rL2tYl+sFtFXiI=
+github.com/Verce11o/yata-protos v0.0.0-20231220164004-590136afa0aa h1:oPMDPsvGi8UvZ65dTJph8xamnRHKpN/SIETQE7MJQDo=
+github.com/Verce11o/yata-protos v0.0.0-20231220164004-590136afa0aa/go.mod h1:jJmuZ7WZnP0vh+yQCAjYw5m53N/m6rL2tYl+sFtFXiI=
 github.com/andybalholm/brotli v1.0.6 h1:Yf9fFpf49Zrxb9NlQaluyE92/+X7UVHlhMNJN2sxfOI=
 github.com/andybalholm/brotli v1.0.6/go.mod h1:fO7iG3H7G2nSZ7m0zPUDn85XEX2GTukHGRSepvi9Eig=
 github.com/cenkalti/backoff/v4 v4.2.1 h1:y4OZtCnogmCPw98Zjyt5a6+QwPLGkiQsYW5oUqylYbM=

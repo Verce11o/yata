@@ -23,3 +23,13 @@ type GetUserResponse struct {
 	IsVerified bool      `json:"is_verified"`
 	CreatedAt  time.Time `json:"created_at"`
 }
+
+type ResetPasswordRequestMiddleware struct {
+	Code string `json:"code" validate:"required"`
+	ResetPasswordRequest
+}
+
+type ResetPasswordRequest struct {
+	Password   string `json:"password" validate:"required"`
+	PasswordRe string `json:"passwordRe" validate:"required"`
+}
