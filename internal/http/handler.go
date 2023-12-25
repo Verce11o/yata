@@ -31,6 +31,11 @@ type CommentsHandler interface {
 	DeleteComment(ctx *fiber.Ctx) error
 }
 
+type NotificationsHandler interface {
+	SubscribeToUser(ctx *fiber.Ctx) error
+	UnSubscribeFromUser(ctx *fiber.Ctx) error
+}
+
 type MiddlewareHandler interface {
 	AuthMiddleware(ctx *fiber.Ctx) error
 	PasswordResetMiddleware(ctx *fiber.Ctx) error
@@ -40,11 +45,12 @@ type Handlers struct {
 	AuthHandler
 	TweetsHandler
 	CommentsHandler
+	NotificationsHandler
 	MiddlewareHandler
 }
 
-func NewHandlers(authHandler AuthHandler, tweetsHandler TweetsHandler, commentsHandler CommentsHandler, middlewareHandler MiddlewareHandler) *Handlers {
-	return &Handlers{AuthHandler: authHandler, TweetsHandler: tweetsHandler, CommentsHandler: commentsHandler, MiddlewareHandler: middlewareHandler}
+func NewHandlers(authHandler AuthHandler, tweetsHandler TweetsHandler, commentsHandler CommentsHandler, notificationsHandler NotificationsHandler, middlewareHandler MiddlewareHandler) *Handlers {
+	return &Handlers{AuthHandler: authHandler, TweetsHandler: tweetsHandler, NotificationsHandler: notificationsHandler, CommentsHandler: commentsHandler, MiddlewareHandler: middlewareHandler}
 }
 
 func (h *Handlers) InitRoutes(app *fiber.App) {
@@ -66,6 +72,12 @@ func (h *Handlers) InitRoutes(app *fiber.App) {
 			user.Post("/forgot-password", h.ForgotPassword)
 			user.Get("/verify-password", h.VerifyPassword)
 			user.Put("/reset-password", h.PasswordResetMiddleware, h.ResetPassword)
+
+			notifications := user.Group("/:id/")
+			{
+				notifications.Post("/subscribe", h.SubscribeToUser)
+				notifications.Post("/unsubscribe", h.UnSubscribeFromUser)
+			}
 		}
 
 		tweets := api.Group("/tweets", h.AuthMiddleware)

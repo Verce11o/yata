@@ -73,16 +73,17 @@ func (h *Handler) AuthMiddleware(c *fiber.Ctx) error {
 		})
 	}
 
-	span.AddEvent("call Auth Service")
-
-	_, err = h.services.Auth.GetUserByID(ctx, &sso.GetUserRequest{UserId: userID})
-
-	if err != nil {
-		h.log.Errorf("AuthMiddleware: %v", err.Error())
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"message": "server error",
-		})
-	}
+	// I guess it's useless
+	//span.AddEvent("call Auth Service")
+	//
+	//_, err = h.services.Auth.GetUserByID(ctx, &sso.GetUserRequest{UserId: userID})
+	//
+	//if err != nil {
+	//	h.log.Errorf("AuthMiddleware: %v", err.Error())
+	//	return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+	//		"message": "server error",
+	//	})
+	//}
 
 	c.Locals("userID", userID)
 

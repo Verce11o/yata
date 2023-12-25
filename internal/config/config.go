@@ -53,6 +53,9 @@ type Services struct {
 	Comments struct {
 		Addr string `yaml:"addr"`
 	}
+	Notifications struct {
+		Addr string `yaml:"addr"`
+	}
 }
 
 func LoadConfig() *Config {
