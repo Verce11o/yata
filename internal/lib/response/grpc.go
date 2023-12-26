@@ -23,7 +23,7 @@ func mapGRPCErrCodeToHttpStatus(code codes.Code) (int, string) {
 	case codes.DeadlineExceeded:
 		return http.StatusGatewayTimeout, "deadline exceeded"
 	case codes.InvalidArgument:
-		return http.StatusBadRequest, "invalid argument"
+		return http.StatusBadRequest, "invalid request"
 	}
 	return http.StatusInternalServerError, "server error"
 }

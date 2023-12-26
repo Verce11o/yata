@@ -9,6 +9,7 @@ import (
 
 var (
 	ErrInvalidRequest   = errors.New("invalid request")
+	ErrUserNotFound     = errors.New("user not found")
 	ErrInvalidImage     = errors.New("invalid image")
 	ErrInvalidCode      = errors.New("invalid code or expired")
 	ErrPasswordMismatch = errors.New("password mismatch")
@@ -24,6 +25,8 @@ func mapErrorWithCode(err error) int {
 		return http.StatusBadRequest
 	case errors.Is(err, ErrInvalidCode):
 		return http.StatusBadRequest
+	case errors.Is(err, ErrUserNotFound):
+		return http.StatusNotFound
 	}
 
 	return http.StatusInternalServerError
