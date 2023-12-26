@@ -25,8 +25,6 @@ func NewHandler(log *zap.SugaredLogger, tracer trace.Tracer, services *service.S
 	return &Handler{log: log, tracer: tracer, services: services, validator: validator}
 }
 
-// TODO validate uuid
-
 func (h *Handler) SubscribeToUser(c *fiber.Ctx) error {
 	ctx, span := h.tracer.Start(c.UserContext(), "Gateway.SubscribeToUser")
 	defer span.End()
