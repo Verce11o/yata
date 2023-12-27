@@ -10,3 +10,8 @@ type TweetResponse struct {
 	UserID  string `json:"user_id"`
 	Text    string `json:"text"`
 }
+
+type IncomingNewTweetNotification struct {
+	FromUserID string `json:"from_user_id"`
+	ShortTitle string `json:"short_title"`
+}

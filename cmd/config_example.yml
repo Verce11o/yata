@@ -14,6 +14,17 @@ services:
   tweets:
     addr: 127.0.0.1:3998
 
+rabbitmq:
+  username: vercello
+  password: vercello
+  host: localhost
+  port: 5672
+  exchangeName: tweets-exchange
+  queueName: tweets-queue
+  consumerTag: tweets-consumer
+  bindingKey: tweets-routing-key
+
+
 metrics:
   jaeger:
     endpoint: http://localhost:14268/api/traces

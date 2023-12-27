@@ -10,6 +10,7 @@ import (
 	"github.com/Verce11o/yata/internal/lib/token"
 	"github.com/Verce11o/yata/internal/service"
 	"github.com/go-playground/validator/v10"
+	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 	"go.opentelemetry.io/otel/trace"
@@ -119,4 +120,18 @@ func (h *Handler) PasswordResetMiddleware(c *fiber.Ctx) error {
 	c.Locals("code", input.Code)
 
 	return c.Next()
+}
+
+func (h *Handler) WebSocketMiddleware(c *fiber.Ctx) error {
+	ctx, span := h.tracer.Start(c.UserContext(), "WebSocketMiddleware")
+	c.SetUserContext(ctx)
+	defer span.End()
+
+	if websocket.IsWebSocketUpgrade(c) {
+		c.Locals("allowed", true)
+		return c.Next()
+	}
+
+	h.log.Errorf("WebSocketMiddleware: request upgrade required")
+	return response.WithError(c, fiber.ErrUpgradeRequired)
 }

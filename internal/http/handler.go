@@ -1,6 +1,7 @@
 package http
 
 import (
+	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -36,9 +37,14 @@ type NotificationsHandler interface {
 	UnSubscribeFromUser(ctx *fiber.Ctx) error
 }
 
+type WebSocketHandler interface {
+	EstablishConnection(conn *websocket.Conn)
+}
+
 type MiddlewareHandler interface {
 	AuthMiddleware(ctx *fiber.Ctx) error
 	PasswordResetMiddleware(ctx *fiber.Ctx) error
+	WebSocketMiddleware(c *fiber.Ctx) error
 }
 
 type Handlers struct {
@@ -46,11 +52,12 @@ type Handlers struct {
 	TweetsHandler
 	CommentsHandler
 	NotificationsHandler
+	WebSocketHandler
 	MiddlewareHandler
 }
 
-func NewHandlers(authHandler AuthHandler, tweetsHandler TweetsHandler, commentsHandler CommentsHandler, notificationsHandler NotificationsHandler, middlewareHandler MiddlewareHandler) *Handlers {
-	return &Handlers{AuthHandler: authHandler, TweetsHandler: tweetsHandler, NotificationsHandler: notificationsHandler, CommentsHandler: commentsHandler, MiddlewareHandler: middlewareHandler}
+func NewHandlers(authHandler AuthHandler, tweetsHandler TweetsHandler, commentsHandler CommentsHandler, notificationsHandler NotificationsHandler, webSocketHandler WebSocketHandler, middlewareHandler MiddlewareHandler) *Handlers {
+	return &Handlers{AuthHandler: authHandler, TweetsHandler: tweetsHandler, CommentsHandler: commentsHandler, NotificationsHandler: notificationsHandler, WebSocketHandler: webSocketHandler, MiddlewareHandler: middlewareHandler}
 }
 
 func (h *Handlers) InitRoutes(app *fiber.App) {
@@ -73,7 +80,9 @@ func (h *Handlers) InitRoutes(app *fiber.App) {
 			user.Get("/verify-password", h.VerifyPassword)
 			user.Put("/reset-password", h.PasswordResetMiddleware, h.ResetPassword)
 
-			notifications := user.Group("/:id/")
+			user.Get("/ws", h.WebSocketMiddleware, websocket.New(h.EstablishConnection))
+
+			notifications := user.Group("/:id")
 			{
 				notifications.Post("/subscribe", h.SubscribeToUser)
 				notifications.Post("/unsubscribe", h.UnSubscribeFromUser)

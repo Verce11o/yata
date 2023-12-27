@@ -25,6 +25,8 @@ func mapErrorWithCode(err error) int {
 		return http.StatusBadRequest
 	case errors.Is(err, ErrInvalidCode):
 		return http.StatusBadRequest
+	case errors.Is(err, fiber.ErrUpgradeRequired):
+		return http.StatusUpgradeRequired
 	case errors.Is(err, ErrUserNotFound):
 		return http.StatusNotFound
 	}
