@@ -1,8 +1,6 @@
 package rabbitmq
 
 import (
-	"encoding/json"
-	domain "github.com/Verce11o/yata/internal/domain"
 	"github.com/Verce11o/yata/internal/http/websocket"
 
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -100,37 +98,37 @@ func (c *NotificationConsumer) StartConsumer(queueName, consumerTag, exchangeNam
 }
 
 func (c *NotificationConsumer) worker(index int, messages <-chan amqp.Delivery, clients websocket.WsClients) {
-	for message := range messages {
-		c.log.Infof("Worker #%d: %v", index, string(message.Body))
-
-		var request domain.IncomingNewTweetNotification // under change
-
-		err := json.Unmarshal(message.Body, &request)
-
-		if err != nil {
-			c.log.Errorf("failed to unmarshal request: %v", err)
-		}
-
-		// get all user subscribers
-
-		conn, ok := clients[request.FromUserID]
-
-		if ok {
-			// mark notification as read
-		}
-
-		err = conn.WriteJSON(request)
-
-		if err != nil {
-			c.log.Errorf("error sending notification: %v", err.Error())
-		}
-
-		err = message.Ack(false)
-
-		if err != nil {
-			c.log.Errorf("failed to acknowledge delivery: %v", err)
-		}
-
-	}
+	//for message := range messages {
+	//	c.log.Infof("Worker #%d: %v", index, string(message.Body))
+	//
+	//	var request domain.IncomingNewTweetNotification // under change
+	//
+	//	err := json.Unmarshal(message.Body, &request)
+	//
+	//	if err != nil {
+	//		c.log.Errorf("failed to unmarshal request: %v", err)
+	//	}
+	//
+	//	// get all user subscribers
+	//
+	//	conn, ok := clients[request.FromUserID]
+	//
+	//	if ok {
+	//		// mark notification as read
+	//	}
+	//
+	//	err = conn.WriteJSON(request)
+	//
+	//	if err != nil {
+	//		c.log.Errorf("error sending notification: %v", err.Error())
+	//	}
+	//
+	//	err = message.Ack(false)
+	//
+	//	if err != nil {
+	//		c.log.Errorf("failed to acknowledge delivery: %v", err)
+	//	}
+	//
+	//}
 	c.log.Info("Channel closed")
 }

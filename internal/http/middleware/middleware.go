@@ -3,7 +3,6 @@ package middleware
 import (
 	"errors"
 	"fmt"
-	"github.com/Verce11o/yata-protos/gen/go/sso"
 	"github.com/Verce11o/yata/internal/config"
 	"github.com/Verce11o/yata/internal/domain"
 	"github.com/Verce11o/yata/internal/lib/response"
@@ -106,7 +105,7 @@ func (h *Handler) PasswordResetMiddleware(c *fiber.Ctx) error {
 		return response.WithError(c, err)
 	}
 
-	_, err := h.services.Auth.VerifyPassword(ctx, &sso.VerifyPasswordRequest{Code: input.Code})
+	err := h.services.Auth.VerifyPassword(ctx, input.Code)
 
 	if err != nil {
 		h.log.Errorf("PasswordResetMiddleware:GRPC: %v", err.Error())

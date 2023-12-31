@@ -1,13 +1,11 @@
 package auth
 
 import (
-	pbSSO "github.com/Verce11o/yata-protos/gen/go/sso"
 	"github.com/Verce11o/yata/internal/domain"
 	"github.com/Verce11o/yata/internal/lib/response"
 	"github.com/Verce11o/yata/internal/service"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -18,12 +16,12 @@ import (
 type Handler struct {
 	log       *zap.SugaredLogger
 	tracer    trace.Tracer
-	services  *service.Services
+	service   service.Auth
 	validator *validator.Validate
 }
 
-func NewHandler(log *zap.SugaredLogger, tracer trace.Tracer, services *service.Services, validator *validator.Validate) *Handler {
-	return &Handler{log: log, tracer: tracer, services: services, validator: validator}
+func NewHandler(log *zap.SugaredLogger, tracer trace.Tracer, service service.Auth, validator *validator.Validate) *Handler {
+	return &Handler{log: log, tracer: tracer, service: service, validator: validator}
 }
 
 func (h *Handler) SignUp(c *fiber.Ctx) error {
@@ -37,22 +35,16 @@ func (h *Handler) SignUp(c *fiber.Ctx) error {
 		return response.WithError(c, err)
 	}
 
-	resp, err := h.services.Auth.Register(ctx, &pbSSO.RegisterRequest{
-		Username: input.Username,
-		Email:    input.Email,
-		Password: input.Password,
-	})
+	userID, err := h.service.Register(ctx, input)
 
 	if err != nil {
 		h.log.Errorf("Signup:GRPC: %s", err.Error())
-
 		st, _ := status.FromError(err)
-
 		return response.WithGRPCError(c, st.Code())
 	}
 
 	return c.Status(http.StatusOK).JSON(fiber.Map{
-		"id": resp.GetUserId(),
+		"id": userID,
 	})
 }
 
@@ -67,21 +59,16 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 		return response.WithError(c, err)
 	}
 
-	resp, err := h.services.Auth.Login(ctx, &pbSSO.LoginRequest{
-		Email:    input.Email,
-		Password: input.Password,
-	})
+	token, err := h.service.Login(ctx, input)
 
 	if err != nil {
 		h.log.Errorf("Login:GRPC: %s", err.Error())
-
 		st, _ := status.FromError(err)
-
 		return response.WithGRPCError(c, st.Code())
 	}
 
 	return c.Status(http.StatusOK).JSON(fiber.Map{
-		"token": resp.GetToken(),
+		"token": token,
 	})
 
 }
@@ -93,9 +80,7 @@ func (h *Handler) Verify(c *fiber.Ctx) error {
 	userID := c.Locals("userID")
 	h.log.Debug(userID)
 
-	_, err := h.services.Auth.VerifyUser(ctx, &pbSSO.VerifyRequest{
-		UserId: userID.(string),
-	})
+	err := h.service.VerifyUser(ctx, userID.(string))
 
 	if err != nil {
 		h.log.Errorf("Verify:GRPC: %v", err.Error())
@@ -113,8 +98,6 @@ func (h *Handler) Activate(c *fiber.Ctx) error {
 	ctx, span := h.tracer.Start(c.UserContext(), "Gateway.Activate")
 	defer span.End()
 
-	//userID := c.Locals("userID")
-
 	code := c.Query("code")
 
 	if code == "" {
@@ -122,9 +105,7 @@ func (h *Handler) Activate(c *fiber.Ctx) error {
 		return response.WithError(c, response.ErrInvalidCode)
 	}
 
-	_, err := h.services.Auth.CheckVerify(ctx, &pbSSO.CheckVerifyRequest{
-		Code: code,
-	})
+	err := h.service.CheckVerify(ctx, code)
 
 	if err != nil {
 		h.log.Errorf("Activate:GRPC: %v", err.Error())
@@ -144,7 +125,7 @@ func (h *Handler) GetUserByID(c *fiber.Ctx) error {
 
 	userID := c.Locals("userID")
 
-	user, err := h.services.Auth.GetUserByID(ctx, &pbSSO.GetUserRequest{UserId: userID.(string)})
+	user, err := h.service.GetUserByID(ctx, userID.(string))
 
 	if err != nil {
 		h.log.Errorf("GetUserByID:GRPC: %v", err.Error())
@@ -152,13 +133,7 @@ func (h *Handler) GetUserByID(c *fiber.Ctx) error {
 		return response.WithGRPCError(c, st.Code())
 	}
 
-	return c.Status(http.StatusOK).JSON(domain.GetUserResponse{
-		UserID:     uuid.MustParse(user.GetUserId()),
-		Username:   user.GetUsername(),
-		Email:      user.GetEmail(),
-		IsVerified: user.GetIsVerified(),
-		CreatedAt:  user.GetCreatedAt().AsTime(),
-	})
+	return c.Status(http.StatusOK).JSON(user)
 }
 
 func (h *Handler) ForgotPassword(c *fiber.Ctx) error {
@@ -167,7 +142,7 @@ func (h *Handler) ForgotPassword(c *fiber.Ctx) error {
 
 	userID := c.Locals("userID")
 
-	_, err := h.services.Auth.ForgotPassword(ctx, &pbSSO.ForgotPasswordRequest{UserId: userID.(string)})
+	err := h.service.ForgotPassword(ctx, userID.(string))
 
 	if err != nil {
 		h.log.Errorf("ForgotPassword:GRPC: %v", err.Error())
@@ -192,12 +167,11 @@ func (h *Handler) VerifyPassword(c *fiber.Ctx) error {
 		return response.WithError(c, response.ErrInvalidCode)
 	}
 
-	_, err := h.services.Auth.VerifyPassword(ctx, &pbSSO.VerifyPasswordRequest{Code: code})
+	err := h.service.VerifyPassword(ctx, code)
 
 	if err != nil {
 		h.log.Errorf("VerifyPassword:GRPC: %v", err.Error())
 		st, _ := status.FromError(err)
-
 		return response.WithGRPCError(c, st.Code())
 	}
 
@@ -227,12 +201,7 @@ func (h *Handler) ResetPassword(c *fiber.Ctx) error {
 
 	userID := c.Locals("userID")
 
-	_, err := h.services.Auth.ResetPassword(ctx, &pbSSO.ResetPasswordRequest{
-		Code:       code.(string),
-		UserId:     userID.(string),
-		Password:   input.Password,
-		PasswordRe: input.PasswordRe,
-	})
+	err := h.service.ResetPassword(ctx, code.(string), userID.(string), input)
 
 	if err != nil {
 		h.log.Errorf("ResetPassword:GRPC: %v", err.Error())
@@ -241,6 +210,7 @@ func (h *Handler) ResetPassword(c *fiber.Ctx) error {
 		if st.Code() == codes.InvalidArgument {
 			return response.WithError(c, response.ErrPasswordMismatch)
 		}
+
 		return response.WithGRPCError(c, st.Code())
 	}
 

@@ -1,5 +1,7 @@
 package domain
 
+import "mime/multipart"
+
 type CreateTweetInput struct {
 	Text       string `json:"text" validate:"required"`
 	ImageChunk string `json:"image" validate:"base64"`
@@ -11,7 +13,15 @@ type TweetResponse struct {
 	Text    string `json:"text"`
 }
 
-type IncomingNewTweetNotification struct {
-	FromUserID string `json:"from_user_id"`
-	ShortTitle string `json:"short_title"`
+type CreateTweetRequest struct {
+	UserID string
+	Text   string
+	Image  *multipart.FileHeader
+}
+
+type UpdateTweetRequest struct {
+	UserID  string
+	TweetID string
+	Text    string
+	Image   *multipart.FileHeader
 }

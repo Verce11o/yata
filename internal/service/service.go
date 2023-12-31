@@ -1,17 +1,47 @@
 package service
 
 import (
+	"context"
 	pbComments "github.com/Verce11o/yata-protos/gen/go/comments"
 	pbNotifications "github.com/Verce11o/yata-protos/gen/go/notifications"
-	pbSSO "github.com/Verce11o/yata-protos/gen/go/sso"
 	pbTweets "github.com/Verce11o/yata-protos/gen/go/tweets"
+	"github.com/Verce11o/yata/internal/clients"
 	"github.com/Verce11o/yata/internal/config"
+	"github.com/Verce11o/yata/internal/domain"
 	trace "github.com/Verce11o/yata/internal/lib/metrics/tracer"
+	"go.uber.org/zap"
 	"time"
 )
 
+type Auth interface {
+	Register(ctx context.Context, input domain.SignUpInput) (string, error)
+	VerifyUser(ctx context.Context, userID string) error
+	CheckVerify(ctx context.Context, code string) error
+	Login(ctx context.Context, input domain.SignInInput) (string, error)
+	GetUserByID(ctx context.Context, userID string) (domain.GetUserResponse, error)
+	ForgotPassword(ctx context.Context, userID string) error
+	VerifyPassword(ctx context.Context, code string) error
+	ResetPassword(ctx context.Context, code string, userID string, input domain.ResetPasswordRequest) error
+}
+
+type Tweet interface {
+	CreateTweet(ctx context.Context, input domain.CreateTweetRequest) (string, error)
+	GetTweet(ctx context.Context, tweetID string) (domain.TweetResponse, error)
+	GetAllTweets(ctx context.Context, cursor string) ([]domain.TweetResponse, string, error)
+	UpdateTweet(ctx context.Context, input domain.UpdateTweetRequest) (domain.TweetResponse, error)
+	DeleteTweet(ctx context.Context, userID, tweetID string) error
+}
+
+type Comment interface {
+	CreateComment(ctx context.Context, input domain.CreateCommentRequest) (string, error)
+	GetComment(ctx context.Context, commentID string) (domain.CommentResponse, error)
+	GetAllTweetComments(ctx context.Context, cursor string, tweetID string) ([]domain.CommentResponse, string, error)
+	UpdateComment(ctx context.Context, input domain.UpdateCommentRequest) (domain.CommentResponse, error)
+	DeleteComment(ctx context.Context, commentID, userID string) error
+}
+
 type Services struct {
-	Auth          pbSSO.AuthClient
+	Auth          Auth
 	Tweets        pbTweets.TweetsClient
 	Comments      pbComments.CommentsClient
 	Notifications pbNotifications.NotificationsClient
@@ -24,11 +54,11 @@ const (
 
 // TODO add ping on start
 
-func NewServices(cfg *config.Config, tracer *trace.JaegerTracing) *Services {
+func NewServices(cfg config.Services, log *zap.SugaredLogger, tracer *trace.JaegerTracing) *Services {
 	return &Services{
-		Auth:          MakeAuthServiceClient(cfg.Services, tracer, grpcRetriesCount, grpcTimeout),
-		Tweets:        MakeTweetsServiceClient(cfg.Services, tracer, grpcRetriesCount, grpcTimeout),
-		Comments:      MakeCommentsServiceClient(cfg.Services, tracer, grpcRetriesCount, grpcTimeout),
-		Notifications: MakeNotificationsServiceClient(cfg.Services, tracer, grpcRetriesCount, grpcTimeout),
+		Auth:          NewAuthService(log, tracer.Tracer, clients.MakeAuthServiceClient(cfg, tracer, grpcRetriesCount, grpcTimeout)),
+		Tweets:        MakeTweetsServiceClient(cfg, tracer, grpcRetriesCount, grpcTimeout),
+		Comments:      MakeCommentsServiceClient(cfg, tracer, grpcRetriesCount, grpcTimeout),
+		Notifications: MakeNotificationsServiceClient(cfg, tracer, grpcRetriesCount, grpcTimeout),
 	}
 }
