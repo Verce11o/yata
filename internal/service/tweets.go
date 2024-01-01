@@ -1,41 +1,44 @@
 package service
 
 import (
+	"context"
 	pbTweets "github.com/Verce11o/yata-protos/gen/go/tweets"
-	"github.com/Verce11o/yata/internal/config"
-	trace "github.com/Verce11o/yata/internal/lib/metrics/tracer"
-	grpcretry "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/retry"
-	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
-	"go.opentelemetry.io/otel/propagation"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/credentials/insecure"
-	"log"
-	"time"
+	"github.com/Verce11o/yata/internal/domain"
+	"go.opentelemetry.io/otel/trace"
+	"go.uber.org/zap"
 )
 
-func MakeTweetsServiceClient(cfg config.Services, tracer *trace.JaegerTracing, retriesCount int, timeout time.Duration) pbTweets.TweetsClient {
+type TweetService struct {
+	log    *zap.SugaredLogger
+	tracer trace.Tracer
+	client pbTweets.TweetsClient
+}
 
-	retryOpts := []grpcretry.CallOption{
-		grpcretry.WithCodes(codes.Unavailable),
-		grpcretry.WithMax(uint(retriesCount)),
-		grpcretry.WithPerRetryTimeout(timeout),
-	}
+func NewTweetService(log *zap.SugaredLogger, tracer trace.Tracer, client pbTweets.TweetsClient) *TweetService {
+	return &TweetService{log: log, tracer: tracer, client: client}
+}
 
-	cc, err := grpc.Dial(cfg.Tweets.Addr, grpc.WithTransportCredentials(
-		insecure.NewCredentials()),
-		grpc.WithChainUnaryInterceptor(
-			otelgrpc.UnaryClientInterceptor(
-				otelgrpc.WithTracerProvider(tracer.Provider),
-				otelgrpc.WithPropagators(propagation.TraceContext{}),
-			),
-			grpcretry.UnaryClientInterceptor(retryOpts...),
-		),
-	)
+func (t *TweetService) CreateTweet(ctx context.Context, input domain.CreateTweetRequest) (string, error) {
+	//TODO implement me
+	panic("implement me")
+}
 
-	if err != nil {
-		log.Fatalf("error while connect to tweets client: %s", err)
-	}
+func (t *TweetService) GetTweet(ctx context.Context, tweetID string) (domain.TweetResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
 
-	return pbTweets.NewTweetsClient(cc)
+func (t *TweetService) GetAllTweets(ctx context.Context, cursor string) ([]domain.TweetResponse, string, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (t *TweetService) UpdateTweet(ctx context.Context, input domain.UpdateTweetRequest) (domain.TweetResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (t *TweetService) DeleteTweet(ctx context.Context, userID, tweetID string) error {
+	//TODO implement me
+	panic("implement me")
 }

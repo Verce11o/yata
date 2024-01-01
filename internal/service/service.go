@@ -4,7 +4,6 @@ import (
 	"context"
 	pbComments "github.com/Verce11o/yata-protos/gen/go/comments"
 	pbNotifications "github.com/Verce11o/yata-protos/gen/go/notifications"
-	pbTweets "github.com/Verce11o/yata-protos/gen/go/tweets"
 	"github.com/Verce11o/yata/internal/clients"
 	"github.com/Verce11o/yata/internal/config"
 	"github.com/Verce11o/yata/internal/domain"
@@ -42,7 +41,7 @@ type Comment interface {
 
 type Services struct {
 	Auth          Auth
-	Tweets        pbTweets.TweetsClient
+	Tweets        Tweet
 	Comments      pbComments.CommentsClient
 	Notifications pbNotifications.NotificationsClient
 }
@@ -57,7 +56,7 @@ const (
 func NewServices(cfg config.Services, log *zap.SugaredLogger, tracer *trace.JaegerTracing) *Services {
 	return &Services{
 		Auth:          NewAuthService(log, tracer.Tracer, clients.MakeAuthServiceClient(cfg, tracer, grpcRetriesCount, grpcTimeout)),
-		Tweets:        MakeTweetsServiceClient(cfg, tracer, grpcRetriesCount, grpcTimeout),
+		Tweets:        NewTweetService(log, tracer.Tracer, clients.MakeTweetsServiceClient(cfg, tracer, grpcRetriesCount, grpcTimeout)),
 		Comments:      MakeCommentsServiceClient(cfg, tracer, grpcRetriesCount, grpcTimeout),
 		Notifications: MakeNotificationsServiceClient(cfg, tracer, grpcRetriesCount, grpcTimeout),
 	}
