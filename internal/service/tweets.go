@@ -19,8 +19,32 @@ func NewTweetService(log *zap.SugaredLogger, tracer trace.Tracer, client pbTweet
 }
 
 func (t *TweetService) CreateTweet(ctx context.Context, input domain.CreateTweetRequest) (string, error) {
-	//TODO implement me
-	panic("implement me")
+	ctx, span := t.tracer.Start(ctx, "Service.CreateTweet")
+	defer span.End()
+
+	var pbImage *pbTweets.Image
+
+	if input.Image != nil {
+		pbImage = &pbTweets.Image{
+			Chunk:       input.Image.Chunk,
+			ContentType: input.Image.ContentType,
+			Name:        input.Image.ImageName,
+		}
+	}
+
+	resp, err := t.client.CreateTweet(ctx, &pbTweets.CreateTweetRequest{
+		UserId: input.UserID,
+		Text:   input.Text,
+		Image:  pbImage,
+	})
+
+	if err != nil {
+		t.log.Errorf("cannot create tweet: %v", err)
+		return "", err
+	}
+
+	return resp.GetTweetId(), nil
+
 }
 
 func (t *TweetService) GetTweet(ctx context.Context, tweetID string) (domain.TweetResponse, error) {

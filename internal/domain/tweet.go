@@ -1,7 +1,5 @@
 package domain
 
-import "mime/multipart"
-
 type CreateTweetInput struct {
 	Text       string `json:"text" validate:"required"`
 	ImageChunk string `json:"image" validate:"base64"`
@@ -16,12 +14,18 @@ type TweetResponse struct {
 type CreateTweetRequest struct {
 	UserID string
 	Text   string
-	Image  *multipart.FileHeader
+	Image  *Image
+}
+
+type Image struct {
+	ContentType string
+	Chunk       []byte
+	ImageName   string
 }
 
 type UpdateTweetRequest struct {
 	UserID  string
 	TweetID string
 	Text    string
-	Image   *multipart.FileHeader
+	Image   *Image
 }

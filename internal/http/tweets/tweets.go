@@ -1,7 +1,6 @@
 package tweets
 
 import (
-	pbTweets "github.com/Verce11o/yata-protos/gen/go/tweets"
 	"github.com/Verce11o/yata/internal/domain"
 	"github.com/Verce11o/yata/internal/lib/files"
 	"github.com/Verce11o/yata/internal/lib/response"
@@ -35,7 +34,7 @@ func (h *Handler) CreateTweet(c *fiber.Ctx) error {
 
 	imageInput, err := c.FormFile("image")
 
-	var image *pbTweets.Image
+	var image *domain.Image
 
 	if err == nil {
 		contentType, bytes, imageName, err := files.PrepareImage(imageInput)
@@ -45,16 +44,16 @@ func (h *Handler) CreateTweet(c *fiber.Ctx) error {
 			return response.WithError(c, err)
 		}
 
-		image = &pbTweets.Image{
+		image = &domain.Image{
 			Chunk:       bytes,
 			ContentType: contentType,
-			Name:        imageName,
+			ImageName:   imageName,
 		}
 
 	}
 
-	resp, err := h.services.Tweets.CreateTweet(ctx, &pbTweets.CreateTweetRequest{
-		UserId: userID.(string),
+	tweetID, err := h.services.Tweets.CreateTweet(ctx, domain.CreateTweetRequest{
+		UserID: userID.(string),
 		Text:   text,
 		Image:  image,
 	})
@@ -66,7 +65,7 @@ func (h *Handler) CreateTweet(c *fiber.Ctx) error {
 	}
 
 	return c.Status(http.StatusOK).JSON(fiber.Map{
-		"id": resp.GetTweetId(),
+		"id": tweetID,
 	})
 
 }
@@ -77,7 +76,7 @@ func (h *Handler) GetTweet(c *fiber.Ctx) error {
 
 	tweetID := c.Params("id")
 
-	tweet, err := h.services.Tweets.GetTweet(ctx, &pbTweets.GetTweetRequest{TweetId: tweetID})
+	tweet, err := h.services.Tweets.GetTweet(ctx, tweetID)
 
 	if err != nil {
 		h.log.Errorf("GetTweet:GRPC: %v", err.Error())
@@ -85,32 +84,26 @@ func (h *Handler) GetTweet(c *fiber.Ctx) error {
 		return response.WithGRPCError(c, st.Code())
 	}
 
-	return c.Status(http.StatusOK).JSON(domain.TweetResponse{
-		TweetID: tweet.GetTweetId(),
-		UserID:  tweet.GetUserId(),
-		Text:    tweet.GetText(),
-	})
+	return c.Status(http.StatusOK).JSON(tweet)
 
 }
 
 func (h *Handler) GetAllTweets(c *fiber.Ctx) error {
-	ctx, span := h.tracer.Start(c.UserContext(), "Gateway.GetTweet")
+	ctx, span := h.tracer.Start(c.UserContext(), "Gateway.GetAllTweets")
 	defer span.End()
 
 	cursor := c.Query("cursor")
 
-	resp, err := h.services.Tweets.GetAllTweets(ctx, &pbTweets.GetAllTweetsRequest{Cursor: cursor})
+	tweets, cursor, err := h.services.Tweets.GetAllTweets(ctx, cursor)
 
 	if err != nil {
 		h.log.Errorf("GetAllTweets:GRPC: %v", err.Error())
 		return response.WithError(c, err)
 	}
 
-	tweets := resp.GetTweets()
-
 	return c.Status(http.StatusOK).JSON(fiber.Map{
 		"data":   tweets,
-		"cursor": resp.GetCursor(),
+		"cursor": cursor,
 	})
 
 }
@@ -126,7 +119,7 @@ func (h *Handler) UpdateTweet(c *fiber.Ctx) error {
 
 	imageInput, err := c.FormFile("image")
 
-	var image *pbTweets.Image
+	var image *domain.Image
 
 	if err == nil {
 		contentType, bytes, imageName, err := files.PrepareImage(imageInput)
@@ -136,19 +129,19 @@ func (h *Handler) UpdateTweet(c *fiber.Ctx) error {
 			return response.WithError(c, err)
 		}
 
-		image = &pbTweets.Image{
+		image = &domain.Image{
 			Chunk:       bytes,
 			ContentType: contentType,
-			Name:        imageName,
+			ImageName:   imageName,
 		}
 
 	}
 
-	tweet, err := h.services.Tweets.UpdateTweet(ctx, &pbTweets.UpdateTweetRequest{
-		UserId:  userID.(string),
+	tweet, err := h.services.Tweets.UpdateTweet(ctx, domain.UpdateTweetRequest{
+		UserID:  userID.(string),
 		Text:    text,
 		Image:   image,
-		TweetId: tweetID,
+		TweetID: tweetID,
 	})
 
 	if err != nil {
@@ -158,8 +151,8 @@ func (h *Handler) UpdateTweet(c *fiber.Ctx) error {
 	}
 
 	return c.Status(http.StatusOK).JSON(domain.TweetResponse{
-		TweetID: tweet.GetTweetId(),
-		Text:    tweet.GetText(),
+		TweetID: tweet.TweetID,
+		Text:    tweet.Text,
 	})
 
 }
@@ -171,7 +164,7 @@ func (h *Handler) DeleteTweet(c *fiber.Ctx) error {
 	userID := c.Locals("userID")
 	tweetID := c.Params("id")
 
-	_, err := h.services.Tweets.DeleteTweet(ctx, &pbTweets.DeleteTweetRequest{UserId: userID.(string), TweetId: tweetID})
+	err := h.services.Tweets.DeleteTweet(ctx, userID.(string), tweetID)
 
 	if err != nil {
 		h.log.Errorf("DeleteTweet:GRPC: %v", err.Error())

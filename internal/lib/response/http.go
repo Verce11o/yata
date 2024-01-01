@@ -37,7 +37,7 @@ func mapErrorWithCode(err error) int {
 // WithError responds to request with provided error
 func WithError(c *fiber.Ctx, err error) error {
 
-	return c.Status(mapErrorWithCode(ErrInvalidRequest)).JSON(fiber.Map{
+	return c.Status(mapErrorWithCode(err)).JSON(fiber.Map{
 		"message": err.Error(),
 	})
 }
