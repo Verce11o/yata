@@ -4,7 +4,7 @@ go 1.21.3
 
 require (
 	github.com/Verce11o/yata-notifications v0.0.0-20231226160015-d8fb27ab59ee
-	github.com/Verce11o/yata-protos v0.0.0-20231229134946-0d247ebeb0e2
+	github.com/Verce11o/yata-protos v0.0.0-20240102145956-f1373834f4b9
 	github.com/go-playground/validator/v10 v10.16.0
 	github.com/gofiber/contrib/websocket v1.3.0
 	github.com/gofiber/fiber/v2 v2.51.0
