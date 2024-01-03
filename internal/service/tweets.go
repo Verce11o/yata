@@ -58,9 +58,10 @@ func (t *TweetService) GetTweet(ctx context.Context, tweetID string) (domain.Twe
 	}
 
 	return domain.TweetResponse{
-		TweetID: resp.GetTweetId(),
-		UserID:  resp.GetUserId(),
-		Text:    resp.GetText(),
+		TweetID:   resp.GetTweetId(),
+		UserID:    resp.GetUserId(),
+		Text:      resp.GetText(),
+		CreatedAt: resp.GetCreatedAt().AsTime(),
 	}, nil
 }
 

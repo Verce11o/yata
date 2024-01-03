@@ -9,7 +9,7 @@ type CreateTweetInput struct {
 
 type TweetResponse struct {
 	TweetID   string    `json:"tweet_id"`
-	UserID    string    `json:"user_id"`
+	UserID    string    `json:"user_id,omitempty"`
 	Text      string    `json:"text"`
 	CreatedAt time.Time `json:"created_at"`
 }
