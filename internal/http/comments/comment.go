@@ -1,7 +1,6 @@
 package comments
 
 import (
-	pbComments "github.com/Verce11o/yata-protos/gen/go/comments"
 	"github.com/Verce11o/yata/internal/domain"
 	"github.com/Verce11o/yata/internal/lib/files"
 	"github.com/Verce11o/yata/internal/lib/response"
@@ -37,7 +36,7 @@ func (h *Handler) CreateComment(c *fiber.Ctx) error {
 
 	imageInput, err := c.FormFile("image")
 
-	var image *pbComments.Image
+	var image *domain.Image
 
 	if err == nil {
 		contentType, bytes, imageName, err := files.PrepareImage(imageInput)
@@ -47,17 +46,17 @@ func (h *Handler) CreateComment(c *fiber.Ctx) error {
 			return response.WithError(c, err)
 		}
 
-		image = &pbComments.Image{
+		image = &domain.Image{
 			Chunk:       bytes,
 			ContentType: contentType,
-			Name:        imageName,
+			ImageName:   imageName,
 		}
 
 	}
 
-	resp, err := h.services.Comments.CreateComment(ctx, &pbComments.CreateCommentRequest{
-		UserId:  userID.(string),
-		TweetId: tweetID,
+	commentID, err := h.services.Comments.CreateComment(ctx, domain.CreateCommentRequest{
+		UserID:  userID.(string),
+		TweetID: tweetID,
 		Text:    text,
 		Image:   image,
 	})
@@ -69,7 +68,7 @@ func (h *Handler) CreateComment(c *fiber.Ctx) error {
 	}
 
 	return c.Status(http.StatusOK).JSON(fiber.Map{
-		"id": resp.GetCommentId(),
+		"id": commentID,
 	})
 }
 
@@ -79,7 +78,7 @@ func (h *Handler) GetComment(c *fiber.Ctx) error {
 
 	commentID := c.Params("id")
 
-	comment, err := h.services.Comments.GetComment(ctx, &pbComments.GetCommentRequest{CommentId: commentID})
+	comment, err := h.services.Comments.GetComment(ctx, commentID)
 
 	if err != nil {
 		h.log.Errorf("GetComment:GRPC: %v", err.Error())
@@ -87,13 +86,7 @@ func (h *Handler) GetComment(c *fiber.Ctx) error {
 		return response.WithGRPCError(c, st.Code())
 	}
 
-	return c.Status(http.StatusOK).JSON(domain.CommentResponse{
-		CommentID: comment.GetCommentId(),
-		UserID:    comment.GetUserId(),
-		TweetID:   comment.GetTweetId(),
-		Text:      comment.GetText(),
-		ImageURL:  comment.GetImageUrl(),
-	})
+	return c.Status(http.StatusOK).JSON(comment)
 }
 
 func (h *Handler) GetAllTweetComments(c *fiber.Ctx) error {
@@ -106,18 +99,16 @@ func (h *Handler) GetAllTweetComments(c *fiber.Ctx) error {
 
 	cursor := c.Query("cursor")
 
-	resp, err := h.services.Comments.GetAllTweetComments(ctx, &pbComments.GetAllTweetCommentsRequest{Cursor: cursor, TweetId: tweetID})
+	comments, cursor, err := h.services.Comments.GetAllTweetComments(ctx, cursor, tweetID)
 
 	if err != nil {
 		h.log.Errorf("GetAllTweetComments:GRPC: %v", err.Error())
 		return response.WithError(c, err)
 	}
 
-	comments := resp.GetComments()
-
 	return c.Status(http.StatusOK).JSON(fiber.Map{
 		"data":   comments,
-		"cursor": resp.GetCursor(),
+		"cursor": cursor,
 	})
 }
 
@@ -133,7 +124,7 @@ func (h *Handler) UpdateComment(c *fiber.Ctx) error {
 
 	imageInput, err := c.FormFile("image")
 
-	var image *pbComments.Image
+	var image *domain.Image
 
 	if err == nil {
 		contentType, bytes, imageName, err := files.PrepareImage(imageInput)
@@ -143,20 +134,20 @@ func (h *Handler) UpdateComment(c *fiber.Ctx) error {
 			return response.WithError(c, err)
 		}
 
-		image = &pbComments.Image{
+		image = &domain.Image{
 			Chunk:       bytes,
 			ContentType: contentType,
-			Name:        imageName,
+			ImageName:   imageName,
 		}
 
 	}
 
-	comment, err := h.services.Comments.UpdateComment(ctx, &pbComments.UpdateCommentRequest{
-		TweetId:   tweetID,
-		UserId:    userID.(string),
+	comment, err := h.services.Comments.UpdateComment(ctx, domain.UpdateCommentRequest{
+		TweetID:   tweetID,
+		UserID:    userID.(string),
 		Text:      text,
 		Image:     image,
-		CommentId: commentID,
+		CommentID: commentID,
 	})
 
 	if err != nil {
@@ -165,12 +156,7 @@ func (h *Handler) UpdateComment(c *fiber.Ctx) error {
 		return response.WithGRPCError(c, st.Code())
 	}
 
-	return c.Status(http.StatusOK).JSON(domain.CommentResponse{
-		CommentID: comment.GetCommentId(),
-		TweetID:   comment.GetTweetId(),
-		Text:      comment.GetText(),
-		ImageURL:  comment.GetImageUrl(),
-	})
+	return c.Status(http.StatusOK).JSON(comment)
 }
 
 func (h *Handler) DeleteComment(c *fiber.Ctx) error {
@@ -180,7 +166,7 @@ func (h *Handler) DeleteComment(c *fiber.Ctx) error {
 	userID := c.Locals("userID")
 	commentID := c.Params("comment_id")
 
-	_, err := h.services.Comments.DeleteComment(ctx, &pbComments.DeleteCommentRequest{UserId: userID.(string), CommentId: commentID})
+	err := h.services.Comments.DeleteComment(ctx, userID.(string), commentID)
 
 	if err != nil {
 		h.log.Errorf("DeleteComment:GRPC: %v", err.Error())

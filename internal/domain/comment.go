@@ -1,6 +1,6 @@
 package domain
 
-import "mime/multipart"
+import "time"
 
 type CreateCommentInput struct {
 	TweetID    string `json:"tweet_id" validate:"uuid4"`
@@ -9,24 +9,24 @@ type CreateCommentInput struct {
 }
 
 type CreateCommentRequest struct {
-	UserID  string                `json:"user_id"`
-	TweetID string                `json:"tweet_id"`
-	Text    string                `json:"text"`
-	Image   *multipart.FileHeader `json:"image"`
+	UserID  string
+	TweetID string
+	Text    string
+	Image   *Image
 }
 
 type CommentResponse struct {
-	CommentID string `json:"comment_id"`
-	UserID    string `json:"user_id,omitempty"`
-	TweetID   string `json:"tweet_id"`
-	Text      string `json:"text"`
-	ImageURL  string `json:"image,omitempty"`
+	CommentID string    `json:"comment_id"`
+	UserID    string    `json:"user_id,omitempty"`
+	TweetID   string    `json:"tweet_id"`
+	Text      string    `json:"text"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type UpdateCommentRequest struct {
 	TweetID   string
 	UserID    string
 	Text      string
-	Image     *multipart.FileHeader
+	Image     *Image
 	CommentID string
 }

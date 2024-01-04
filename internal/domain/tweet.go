@@ -20,12 +20,6 @@ type CreateTweetRequest struct {
 	Image  *Image
 }
 
-type Image struct {
-	ContentType string
-	Chunk       []byte
-	ImageName   string
-}
-
 type UpdateTweetRequest struct {
 	UserID  string
 	TweetID string
