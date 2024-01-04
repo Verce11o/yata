@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	pbComments "github.com/Verce11o/yata-protos/gen/go/comments"
-	pbNotifications "github.com/Verce11o/yata-protos/gen/go/notifications"
 	"github.com/Verce11o/yata/internal/clients"
 	"github.com/Verce11o/yata/internal/config"
 	"github.com/Verce11o/yata/internal/domain"
@@ -39,11 +38,19 @@ type Comment interface {
 	DeleteComment(ctx context.Context, commentID, userID string) error
 }
 
+type Notification interface {
+	SubscribeToUser(ctx context.Context, userID, toUserID string) error
+	UnSubscribeFromUser(ctx context.Context, userID, toUserID string) error
+	GetNotifications(ctx context.Context, userID string) ([]domain.Notification, error)
+	MarkNotificationAsRead(ctx context.Context, userID, notificationID string) error
+	ReadAllNotifications(ctx context.Context, userID string) error
+}
+
 type Services struct {
 	Auth          Auth
 	Tweets        Tweet
 	Comments      pbComments.CommentsClient
-	Notifications pbNotifications.NotificationsClient
+	Notifications Notification
 }
 
 const (
@@ -58,6 +65,6 @@ func NewServices(cfg config.Services, log *zap.SugaredLogger, tracer *trace.Jaeg
 		Auth:          NewAuthService(log, tracer.Tracer, clients.MakeAuthServiceClient(cfg, tracer, grpcRetriesCount, grpcTimeout)),
 		Tweets:        NewTweetService(log, tracer.Tracer, clients.MakeTweetsServiceClient(cfg, tracer, grpcRetriesCount, grpcTimeout)),
 		Comments:      MakeCommentsServiceClient(cfg, tracer, grpcRetriesCount, grpcTimeout),
-		Notifications: MakeNotificationsServiceClient(cfg, tracer, grpcRetriesCount, grpcTimeout),
+		Notifications: NewNotificationService(log, tracer.Tracer, clients.MakeNotificationsServiceClient(cfg, tracer, grpcRetriesCount, grpcTimeout)),
 	}
 }

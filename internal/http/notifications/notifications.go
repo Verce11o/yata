@@ -1,7 +1,6 @@
 package notifications
 
 import (
-	pb "github.com/Verce11o/yata-protos/gen/go/notifications"
 	"github.com/Verce11o/yata/internal/lib/response"
 	"github.com/Verce11o/yata/internal/service"
 	"github.com/go-playground/validator/v10"
@@ -45,10 +44,7 @@ func (h *Handler) SubscribeToUser(c *fiber.Ctx) error {
 		return response.WithError(c, response.ErrUserNotFound)
 	}
 
-	_, err = h.services.Notifications.SubscribeToUser(ctx, &pb.SubscribeToUserRequest{
-		UserId:   userID.(string),
-		ToUserId: toUserID,
-	})
+	err = h.services.Notifications.SubscribeToUser(ctx, userID.(string), toUserID)
 
 	if err != nil {
 		h.log.Errorf("SubscribeToUser:GRPC: %v", err.Error())
@@ -75,10 +71,7 @@ func (h *Handler) UnSubscribeFromUser(c *fiber.Ctx) error {
 		return response.WithError(c, response.ErrInvalidRequest)
 	}
 
-	_, err = h.services.Notifications.UnSubscribeFromUser(ctx, &pb.UnSubscribeFromUserRequest{
-		UserId:   userID.(string),
-		ToUserId: toUserID,
-	})
+	err = h.services.Notifications.UnSubscribeFromUser(ctx, userID.(string), toUserID)
 
 	if err != nil {
 		h.log.Errorf("UnSubscribeFromUser:GRPC: %v", err.Error())
@@ -97,7 +90,7 @@ func (h *Handler) GetNotifications(c *fiber.Ctx) error {
 
 	userID := c.Locals("userID")
 
-	resp, err := h.services.Notifications.GetNotifications(ctx, &pb.GetNotificationsRequest{UserId: userID.(string)})
+	resp, err := h.services.Notifications.GetNotifications(ctx, userID.(string))
 
 	if err != nil {
 		h.log.Errorf("GetNotifications:GRPC: %v", err.Error())
@@ -106,7 +99,7 @@ func (h *Handler) GetNotifications(c *fiber.Ctx) error {
 	}
 
 	return c.Status(http.StatusOK).JSON(fiber.Map{
-		"data": resp.Notifications,
+		"data": resp,
 	})
 
 }
@@ -125,10 +118,7 @@ func (h *Handler) MarkNotificationAsRead(c *fiber.Ctx) error {
 		return response.WithError(c, response.ErrInvalidRequest)
 	}
 
-	_, err = h.services.Notifications.MarkNotificationAsRead(ctx, &pb.MarkNotificationAsReadRequest{
-		UserId:         userID.(string),
-		NotificationId: notificationID,
-	})
+	err = h.services.Notifications.MarkNotificationAsRead(ctx, userID.(string), notificationID)
 
 	if err != nil {
 		h.log.Errorf("MarkNotificationAsRead:GRPC: %v", err.Error())
@@ -148,7 +138,7 @@ func (h *Handler) ReadAllNotifications(c *fiber.Ctx) error {
 
 	userID := c.Locals("userID")
 
-	_, err := h.services.Notifications.ReadAllNotifications(ctx, &pb.ReadAllNotificationsRequest{UserId: userID.(string)})
+	err := h.services.Notifications.ReadAllNotifications(ctx, userID.(string))
 
 	if err != nil {
 		h.log.Errorf("ReadAllNotifications:GRPC: %v", err.Error())
